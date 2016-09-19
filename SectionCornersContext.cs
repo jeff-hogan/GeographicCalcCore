@@ -1,14 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Data.Entity;
+
 
 namespace Dynamic.GeographicCalcService
 {
-    public class SectionCornersContext : DbContext
-    {
-        public DbSet<SectionCorners> SectionCorners { get; set; }
-    }
-
     [Table("SectionCorners")]
     public class SectionCorners
     {
