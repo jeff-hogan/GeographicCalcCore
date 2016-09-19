@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.IO.Compression;
 using System.Linq;
 
@@ -13,18 +15,19 @@ namespace Dynamic.GeographicCalcService
         public static TRSClass LoadSectionFromDatabase(TRSClass Location)
         {
             //TRSClass output = Location.Clone();
-                var sections = from s in GetAllSections()
-                               where s.Township == Location.Township &&
-                                     s.Range == Location.Range &&
-                                     s.RangeDir == Location.RangeDirection.Direction &&
-                                     s.Section == Location.Section
-                               select s;
-                if (sections.Count() != 1) return Location;
-                var section = sections.Single();
-                Location.Corners.SetPoint(0, section.UTMURX, section.UTMURY);
-                Location.Corners.SetPoint(1, section.UTMULX, section.UTMULY);
-                Location.Corners.SetPoint(2, section.UTMLLX, section.UTMLLY);
-                Location.Corners.SetPoint(3, section.UTMLRX, section.UTMLRY);
+            var sections = GetAllSections();
+            sections = (from s in sections
+                        where s.Township == Location.Township &&
+                              s.Range == Location.Range &&
+                              s.RangeDir == Location.RangeDirection.Direction &&
+                              s.Section == Location.Section
+                        select s).ToList();
+            if (sections.Count() != 1) return Location;
+            var section = sections.Single();
+            Location.Corners.SetPoint(0, section.UTMURX, section.UTMURY);
+            Location.Corners.SetPoint(1, section.UTMULX, section.UTMULY);
+            Location.Corners.SetPoint(2, section.UTMLLX, section.UTMLLY);
+            Location.Corners.SetPoint(3, section.UTMLRX, section.UTMLRY);
 
             return Location;
         }
@@ -63,20 +66,41 @@ namespace Dynamic.GeographicCalcService
             return Location;
         }
 
-        private static List<SectionCorners> GetAllSections()
+        public static List<SectionCorners> GetAllSections()
         {
             List<SectionCorners> sections = new List<SectionCorners>();
 
-            //using (ZipArchive archive = ZipFile.OpenRead("SectionCorners.zip"))
-            //{
-            //    foreach (ZipArchiveEntry entry in archive.Entries)
-            //    {
-            //        if (entry.FullName.EndsWith(".txt", StringComparison.OrdinalIgnoreCase))
-            //        {
-            //            entry.ExtractToFile(Path.Combine(extractPath, entry.FullName));
-            //        }
-            //    }
-            //}
+            using (ZipArchive archive = ZipFile.OpenRead("SectionCorners.zip"))
+            {
+                ZipArchiveEntry entry = archive.GetEntry("SectionCorners.csv");
+                StreamReader sr = new StreamReader(entry.Open());
+                string text = sr.ReadToEnd();
+                foreach (string line in text.Split('\n'))
+                {
+                    if (line.Contains("ID")) continue;
+                    SectionCorners corner = new SectionCorners();
+                    string[] fields = line.Split(',');
+                    corner.ID = Convert.ToInt64(fields[0]);
+                    corner.Township = Convert.ToInt32(fields[1]);
+                    corner.Range = Convert.ToInt32(fields[2]);
+                    corner.RangeDir = fields[3].Trim();
+                    corner.Section = Convert.ToInt32(fields[4]);
+
+                    corner.UTMURX = Convert.ToDouble(fields[5]);
+                    corner.UTMURY = Convert.ToDouble(fields[6]);
+
+                    corner.UTMULX = Convert.ToDouble(fields[7]);
+                    corner.UTMULY = Convert.ToDouble(fields[8]);
+
+                    corner.UTMLLX = Convert.ToDouble(fields[9]);
+                    corner.UTMLLY = Convert.ToDouble(fields[10]);
+
+                    corner.UTMLRX = Convert.ToDouble(fields[11]);
+                    corner.UTMLRY = Convert.ToDouble(fields[12]);
+
+                    sections.Add(corner);
+                }
+            }
 
 
 

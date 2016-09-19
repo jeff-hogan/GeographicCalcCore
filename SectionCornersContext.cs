@@ -21,5 +21,11 @@ namespace Dynamic.GeographicCalcService
         public double UTMLLY { get; set; }
         public double UTMLRX { get; set; }
         public double UTMLRY { get; set; }
+        public override string ToString()
+        {
+            return string.Format("{0}-{1} {2} {3} {4} {5}",
+                this.ID, this.Township, this.Range, this.RangeDir,
+                this.Section, this.UTMURX);
+        }
     }
 }
